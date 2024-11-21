@@ -1,11 +1,12 @@
 import tkinter as tk
-from tkinter import scrolledtext, Listbox, END, messagebox
+from tkinter import scrolledtext, Listbox, END
 import cohere
 import os
 import pymongo
 from dotenv import load_dotenv
 import google.generativeai as genai
 from bson.objectid import ObjectId
+import time
 
 # Load environment variables
 load_dotenv()
@@ -105,18 +106,28 @@ def send_message():
 
     chat_display.insert(tk.END, f"You: {user_input}\n", "user")
     input_field.delete(0, tk.END)
+    root.update_idletasks()  # Refresh the GUI to display the user's input
 
     # Initialize interaction
     current_input = user_input
-    interaction_limit = 1  # Limit to 1 interactions
+    interaction_limit = 3  # Limit to 3 interactions
 
     for i in range(interaction_limit):
+        # Step 1: Get response from Cohere
         cohere_response = get_cohere_response(current_input)
         chat_display.insert(tk.END, f"Cohere: {cohere_response}\n", "chatgpt")
+        chat_display.see(tk.END)  # Scroll to the latest message
+        root.update_idletasks()
+        time.sleep(1)  # Simulate delay for natural response
 
+        # Step 2: Get response from Gemini
         gemini_response = get_gemini_response(cohere_response)
         chat_display.insert(tk.END, f"Gemini: {gemini_response}\n", "gemini")
+        chat_display.see(tk.END)  # Scroll to the latest message
+        root.update_idletasks()
+        time.sleep(1)  # Simulate delay for natural response
 
+        # Update the input for the next iteration
         current_input = gemini_response
 
     # Save to MongoDB
@@ -146,7 +157,7 @@ def start_new_chat():
 
 # GUI setup
 root = tk.Tk()
-root.title("AI Chatbot with Interaction")
+root.title("AI Chatbot with Real-Time Interaction")
 root.geometry("800x600")
 root.configure(bg="#2D2D2D")
 
